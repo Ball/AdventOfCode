@@ -57,40 +57,43 @@ defmodule Day02 do
     indirect_write(memory, address + 1, input)
   end
 
+
+  def modes <- offset, do: modes |> Enum.at(offset, 0)
+
   def write_output(address, memory, output, modes) do
-    case Enum.at(modes, 0, 0) do
+    case modes <- 0 do
       0 -> [indirect_read(memory, address + 1) | output]
       _ -> [direct_read(memory, address + 1) | output]
     end
   end
 
   def add(address, memory, modes) do
-    a = read(memory, address + 1, Enum.at(modes, 0, 0))
-    b = read(memory, address + 2, Enum.at(modes, 1, 0))
+    a = read(memory, address + 1, modes <- 0)
+    b = read(memory, address + 2, modes <- 1)
     indirect_write(memory, address + 3, a + b)
   end
 
   def multiply(address, memory, modes) do
-    a = read(memory, address + 1, Enum.at(modes, 0, 0))
-    b = read(memory, address + 2, Enum.at(modes, 1, 0))
+    a = read(memory, address + 1, modes <- 0)
+    b = read(memory, address + 2, modes <- 1)
     indirect_write(memory, address + 3, a * b)
   end
 
   def less_than(address, memory, modes) do
-    a = read(memory, address + 1, Enum.at(modes, 0, 0))
-    b = read(memory, address + 2, Enum.at(modes, 1, 0))
+    a = read(memory, address + 1, modes <- 0)
+    b = read(memory, address + 2, modes <- 1)
     indirect_write(memory, address + 3, if(a < b, do: 1, else: 0))
   end
 
   def equals(address, memory, modes) do
-    a = read(memory, address + 1, Enum.at(modes, 0, 0))
-    b = read(memory, address + 2, Enum.at(modes, 1, 0))
+    a = read(memory, address + 1, modes <- 0)
+    b = read(memory, address + 2, modes <- 1)
     indirect_write(memory, address + 3, if(a == b, do: 1, else: 0))
   end
 
   def jump_if_true(address, memory, modes) do
-    a = read(memory, address + 1, Enum.at(modes, 0, 0))
-    b = read(memory, address + 2, Enum.at(modes, 1, 0))
+    a = read(memory, address + 1, modes <- 0)
+    b = read(memory, address + 2, modes <- 1)
 
     if a == 0 do
       address + 3
@@ -100,8 +103,8 @@ defmodule Day02 do
   end
 
   def jump_if_false(address, memory, modes) do
-    a = read(memory, address + 1, Enum.at(modes, 0, 0))
-    b = read(memory, address + 2, Enum.at(modes, 1, 0))
+    a = read(memory, address + 1, modes <- 0)
+    b = read(memory, address + 2, modes <- 1)
 
     if a == 0 do
       b
