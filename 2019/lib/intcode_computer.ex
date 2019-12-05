@@ -1,4 +1,4 @@
-defmodule Day02 do
+defmodule IntcodeComputer do
   def execute(memory, input \\ []) do
     execute(0, memory, input, [])
   end
@@ -126,7 +126,7 @@ defmodule Day02 do
     memory
     |> List.replace_at(1, noun)
     |> List.replace_at(2, verb)
-    |> Day02.execute()
+    |> IntcodeComputer.execute()
     |> elem(0)
     |> Enum.at(0)
   end
