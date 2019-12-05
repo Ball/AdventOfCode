@@ -3,8 +3,8 @@ defmodule IntcodeComputer do
     execute(0, memory, input, [])
   end
 
-  def execute(address, memory, input, output) do
-    raw_opcode = Enum.at(memory, address)
+  def execute(instruction_pointer, memory, input, output) do
+    raw_opcode = Enum.at(memory, instruction_pointer)
     opcode = rem(raw_opcode, 100)
     parameters = Integer.digits(div(raw_opcode, 100)) |> Enum.reverse()
 
@@ -13,28 +13,28 @@ defmodule IntcodeComputer do
         {memory, output}
 
       {1, modes} ->
-        execute(address + 4, add(address, memory, modes), input, output)
+        execute(instruction_pointer + 4, add(instruction_pointer, memory, modes), input, output)
 
       {2, modes} ->
-        execute(address + 4, multiply(address, memory, modes), input, output)
+        execute(instruction_pointer + 4, multiply(instruction_pointer, memory, modes), input, output)
 
       {3, _} ->
-        execute(address + 2, store_input(address, memory, hd(input)), tl(input), output)
+        execute(instruction_pointer + 2, store_input(instruction_pointer, memory, hd(input)), tl(input), output)
 
       {4, modes} ->
-        execute(address + 2, memory, input, write_output(address, memory, output, modes))
+        execute(instruction_pointer + 2, memory, input, write_output(instruction_pointer, memory, output, modes))
 
       {5, modes} ->
-        execute(jump_if_true(address, memory, modes), memory, input, output)
+        execute(jump_if_true(instruction_pointer, memory, modes), memory, input, output)
 
       {6, modes} ->
-        execute(jump_if_false(address, memory, modes), memory, input, output)
+        execute(jump_if_false(instruction_pointer, memory, modes), memory, input, output)
 
       {7, modes} ->
-        execute(address + 4, less_than(address, memory, modes), input, output)
+        execute(instruction_pointer + 4, less_than(instruction_pointer, memory, modes), input, output)
 
       {8, modes} ->
-        execute(address + 4, equals(address, memory, modes), input, output)
+        execute(instruction_pointer + 4, equals(instruction_pointer, memory, modes), input, output)
     end
   end
 
@@ -59,53 +59,53 @@ defmodule IntcodeComputer do
 
   def modes <- offset, do: modes |> Enum.at(offset, 0)
 
-  def write_output(address, memory, output, modes) do
-    [read(memory, address + 1, modes <- 0) | output]
+  def write_output(instruction_pointer, memory, output, modes) do
+    [read(memory, instruction_pointer + 1, modes <- 0) | output]
   end
 
-  def add(address, memory, modes) do
-    a = read(memory, address + 1, modes <- 0)
-    b = read(memory, address + 2, modes <- 1)
-    indirect_write(memory, address + 3, a + b)
+  def add(instruction_pointer, memory, modes) do
+    a = read(memory, instruction_pointer + 1, modes <- 0)
+    b = read(memory, instruction_pointer + 2, modes <- 1)
+    indirect_write(memory, instruction_pointer + 3, a + b)
   end
 
-  def multiply(address, memory, modes) do
-    a = read(memory, address + 1, modes <- 0)
-    b = read(memory, address + 2, modes <- 1)
-    indirect_write(memory, address + 3, a * b)
+  def multiply(instruction_pointer, memory, modes) do
+    a = read(memory, instruction_pointer + 1, modes <- 0)
+    b = read(memory, instruction_pointer + 2, modes <- 1)
+    indirect_write(memory, instruction_pointer + 3, a * b)
   end
 
-  def less_than(address, memory, modes) do
-    a = read(memory, address + 1, modes <- 0)
-    b = read(memory, address + 2, modes <- 1)
-    indirect_write(memory, address + 3, if(a < b, do: 1, else: 0))
+  def less_than(instruction_pointer, memory, modes) do
+    a = read(memory, instruction_pointer + 1, modes <- 0)
+    b = read(memory, instruction_pointer + 2, modes <- 1)
+    indirect_write(memory, instruction_pointer + 3, if(a < b, do: 1, else: 0))
   end
 
-  def equals(address, memory, modes) do
-    a = read(memory, address + 1, modes <- 0)
-    b = read(memory, address + 2, modes <- 1)
-    indirect_write(memory, address + 3, if(a == b, do: 1, else: 0))
+  def equals(instruction_pointer, memory, modes) do
+    a = read(memory, instruction_pointer + 1, modes <- 0)
+    b = read(memory, instruction_pointer + 2, modes <- 1)
+    indirect_write(memory, instruction_pointer + 3, if(a == b, do: 1, else: 0))
   end
 
-  def jump_if_true(address, memory, modes) do
-    a = read(memory, address + 1, modes <- 0)
-    destination = read(memory, address + 2, modes <- 1)
+  def jump_if_true(instruction_pointer, memory, modes) do
+    a = read(memory, instruction_pointer + 1, modes <- 0)
+    destination = read(memory, instruction_pointer + 2, modes <- 1)
 
     if a == 0 do
-      address + 3
+      instruction_pointer + 3
     else
       destination
     end
   end
 
-  def jump_if_false(address, memory, modes) do
-    a = read(memory, address + 1, modes <- 0)
-    destination = read(memory, address + 2, modes <- 1)
+  def jump_if_false(instruction_pointer, memory, modes) do
+    a = read(memory, instruction_pointer + 1, modes <- 0)
+    destination = read(memory, instruction_pointer + 2, modes <- 1)
 
     if a == 0 do
       destination
     else
-      address + 3
+      instruction_pointer + 3
     end
   end
 
