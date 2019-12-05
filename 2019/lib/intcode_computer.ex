@@ -57,14 +57,10 @@ defmodule IntcodeComputer do
     indirect_write(memory, address + 1, input)
   end
 
-
   def modes <- offset, do: modes |> Enum.at(offset, 0)
 
   def write_output(address, memory, output, modes) do
-    case modes <- 0 do
-      0 -> [indirect_read(memory, address + 1) | output]
-      _ -> [direct_read(memory, address + 1) | output]
-    end
+    [read(memory, address + 1, modes <- 0) | output]
   end
 
   def add(address, memory, modes) do
@@ -93,21 +89,21 @@ defmodule IntcodeComputer do
 
   def jump_if_true(address, memory, modes) do
     a = read(memory, address + 1, modes <- 0)
-    b = read(memory, address + 2, modes <- 1)
+    destination = read(memory, address + 2, modes <- 1)
 
     if a == 0 do
       address + 3
     else
-      b
+      destination
     end
   end
 
   def jump_if_false(address, memory, modes) do
     a = read(memory, address + 1, modes <- 0)
-    b = read(memory, address + 2, modes <- 1)
+    destination = read(memory, address + 2, modes <- 1)
 
     if a == 0 do
-      b
+      destination
     else
       address + 3
     end
