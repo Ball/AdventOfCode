@@ -1,40 +1,67 @@
 defmodule IntcodeComputer do
-  def execute(memory, input \\ []) do
-    execute(0, memory, input, [])
+  @enforce_keys [:memory]
+  defstruct [:memory, input: [], output: [], instruction_pointer: 0]
+
+  def execute_program(memory, input \\ []) do
+    %IntcodeComputer{memory: memory, input: input}
+    |> execute()
   end
 
-  def execute(instruction_pointer, memory, input, output) do
-    raw_opcode = Enum.at(memory, instruction_pointer)
+  def execute(computer) do
+    raw_opcode = Enum.at(computer.memory, computer.instruction_pointer)
     opcode = rem(raw_opcode, 100)
     parameters = Integer.digits(div(raw_opcode, 100)) |> Enum.reverse()
 
     case {opcode, parameters} do
       {99, _} ->
-        {memory, output}
+        {computer.memory, computer.output}
 
       {1, modes} ->
-        execute(instruction_pointer + 4, add(instruction_pointer, memory, modes), input, output)
+        execute (%{computer |
+          instruction_pointer: computer.instruction_pointer + 4,
+          memory: add(computer.instruction_pointer, computer.memory, modes)
+        })
 
       {2, modes} ->
-        execute(instruction_pointer + 4, multiply(instruction_pointer, memory, modes), input, output)
+        execute(%{computer |
+          instruction_pointer: computer.instruction_pointer + 4,
+          memory: multiply(computer.instruction_pointer, computer.memory, modes)
+        })
 
       {3, _} ->
-        execute(instruction_pointer + 2, store_input(instruction_pointer, memory, hd(input)), tl(input), output)
+        execute(%{computer |
+          instruction_pointer: computer.instruction_pointer + 2,
+          memory: store_input(computer.instruction_pointer, computer.memory, hd(computer.input)),
+          input: tl(computer.input)
+        })
 
       {4, modes} ->
-        execute(instruction_pointer + 2, memory, input, write_output(instruction_pointer, memory, output, modes))
+        execute(%{computer |
+          instruction_pointer: computer.instruction_pointer + 2,
+          output: write_output(computer.instruction_pointer, computer.memory, computer.output, modes)
+        })
 
       {5, modes} ->
-        execute(jump_if_true(instruction_pointer, memory, modes), memory, input, output)
+        execute(%{computer |
+          instruction_pointer: jump_if_true(computer.instruction_pointer, computer.memory, modes)
+        })
 
       {6, modes} ->
-        execute(jump_if_false(instruction_pointer, memory, modes), memory, input, output)
+        execute(%{computer |
+          instruction_pointer: jump_if_false(computer.instruction_pointer, computer.memory, modes)
+        })
 
       {7, modes} ->
-        execute(instruction_pointer + 4, less_than(instruction_pointer, memory, modes), input, output)
+        execute(%{computer |
+          instruction_pointer: computer.instruction_pointer + 4,
+          memory: less_than(computer.instruction_pointer, computer.memory, modes)
+        })
 
       {8, modes} ->
-        execute(instruction_pointer + 4, equals(instruction_pointer, memory, modes), input, output)
+        execute(%{computer |
+          instruction_pointer: computer.instruction_pointer + 4,
+          memory: equals(computer.instruction_pointer, computer.memory, modes)
+        })
     end
   end
 
@@ -116,12 +143,15 @@ defmodule IntcodeComputer do
     |> String.split(",", trim: true)
     |> Enum.map(&String.trim/1)
     |> Enum.map(&String.to_integer/1)
+    |> (fn memory -> %IntcodeComputer{memory: memory} end).()
   end
 
-  def process(memory, noun, verb) do
-    memory
-    |> List.replace_at(1, noun)
-    |> List.replace_at(2, verb)
+  def process(computer, noun, verb) do
+    %{computer |
+      memory: computer.memory
+        |> List.replace_at(1, noun)
+        |> List.replace_at(2, verb)
+    }
     |> IntcodeComputer.execute()
     |> elem(0)
     |> Enum.at(0)
