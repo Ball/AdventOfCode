@@ -17,51 +17,44 @@ defmodule IntcodeComputer do
         {computer.memory, computer.output}
 
       {1, modes} ->
-        execute (%{computer |
-          instruction_pointer: computer.instruction_pointer + 4,
-          memory: add(computer.instruction_pointer, computer.memory, modes)
-        })
+        computer
+        |> add(modes)
+        |> execute()
 
       {2, modes} ->
-        execute(%{computer |
-          instruction_pointer: computer.instruction_pointer + 4,
-          memory: multiply(computer.instruction_pointer, computer.memory, modes)
-        })
+        computer
+        |> multiply(modes)
+        |> execute()
 
       {3, _} ->
-        execute(%{computer |
-          instruction_pointer: computer.instruction_pointer + 2,
-          memory: store_input(computer.instruction_pointer, computer.memory, hd(computer.input)),
-          input: tl(computer.input)
-        })
+        computer
+        |> store_input()
+        |> execute()
 
       {4, modes} ->
-        execute(%{computer |
-          instruction_pointer: computer.instruction_pointer + 2,
-          output: write_output(computer.instruction_pointer, computer.memory, computer.output, modes)
-        })
+        computer
+        |> write_output(modes)
+        |> execute()
 
       {5, modes} ->
-        execute(%{computer |
-          instruction_pointer: jump_if_true(computer.instruction_pointer, computer.memory, modes)
-        })
+        computer
+        |> jump_if_true(modes)
+        |> execute()
 
       {6, modes} ->
-        execute(%{computer |
-          instruction_pointer: jump_if_false(computer.instruction_pointer, computer.memory, modes)
-        })
+        computer
+        |> jump_if_false(modes)
+        |> execute()
 
       {7, modes} ->
-        execute(%{computer |
-          instruction_pointer: computer.instruction_pointer + 4,
-          memory: less_than(computer.instruction_pointer, computer.memory, modes)
-        })
+        computer
+        |> less_than(modes)
+        |> execute()
 
       {8, modes} ->
-        execute(%{computer |
-          instruction_pointer: computer.instruction_pointer + 4,
-          memory: equals(computer.instruction_pointer, computer.memory, modes)
-        })
+        computer
+        |> equals(modes)
+        |> execute()
     end
   end
 
@@ -80,60 +73,77 @@ defmodule IntcodeComputer do
     List.replace_at(memory, Enum.at(memory, address), value)
   end
 
-  def store_input(address, memory, input) do
-    indirect_write(memory, address + 1, input)
+  def store_input(computer) do
+    %{computer |
+      instruction_pointer: computer.instruction_pointer + 2,
+      memory: indirect_write(computer.memory, computer.instruction_pointer + 1, hd(computer.input)),
+      input: tl(computer.input)
+    }
   end
 
   def modes <- offset, do: modes |> Enum.at(offset, 0)
 
-  def write_output(instruction_pointer, memory, output, modes) do
-    [read(memory, instruction_pointer + 1, modes <- 0) | output]
+  def write_output(computer, modes) do
+    %{computer |
+      instruction_pointer: computer.instruction_pointer + 2,
+      output: [read(computer.memory, computer.instruction_pointer + 1, modes <- 0) | computer.output]
+    }
   end
 
-  def add(instruction_pointer, memory, modes) do
-    a = read(memory, instruction_pointer + 1, modes <- 0)
-    b = read(memory, instruction_pointer + 2, modes <- 1)
-    indirect_write(memory, instruction_pointer + 3, a + b)
+  def add(computer, modes) do
+    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
+    b = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+    %{computer |
+      instruction_pointer: computer.instruction_pointer + 4,
+      memory: indirect_write(computer.memory, computer.instruction_pointer  + 3, a + b)
+    }
   end
 
-  def multiply(instruction_pointer, memory, modes) do
-    a = read(memory, instruction_pointer + 1, modes <- 0)
-    b = read(memory, instruction_pointer + 2, modes <- 1)
-    indirect_write(memory, instruction_pointer + 3, a * b)
+  def multiply(computer, modes) do
+    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
+    b = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+    %{computer |
+      instruction_pointer: computer.instruction_pointer + 4,
+      memory: indirect_write(computer.memory, computer.instruction_pointer + 3, a * b)
+    }
   end
 
-  def less_than(instruction_pointer, memory, modes) do
-    a = read(memory, instruction_pointer + 1, modes <- 0)
-    b = read(memory, instruction_pointer + 2, modes <- 1)
-    indirect_write(memory, instruction_pointer + 3, if(a < b, do: 1, else: 0))
+  def less_than(computer, modes) do
+    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
+    b = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+
+    %{computer |
+      instruction_pointer: computer.instruction_pointer + 4,
+      memory: indirect_write(computer.memory, computer.instruction_pointer + 3, if( a < b , do: 1, else: 0))
+    }
   end
 
-  def equals(instruction_pointer, memory, modes) do
-    a = read(memory, instruction_pointer + 1, modes <- 0)
-    b = read(memory, instruction_pointer + 2, modes <- 1)
-    indirect_write(memory, instruction_pointer + 3, if(a == b, do: 1, else: 0))
+  def equals(computer, modes) do
+    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
+    b = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+    %{computer|
+      instruction_pointer: computer.instruction_pointer + 4,
+      memory: indirect_write(computer.memory, computer.instruction_pointer + 3, if(a == b, do: 1, else: 0))
+    }
   end
 
-  def jump_if_true(instruction_pointer, memory, modes) do
-    a = read(memory, instruction_pointer + 1, modes <- 0)
-    destination = read(memory, instruction_pointer + 2, modes <- 1)
+  def jump_if_true(computer, modes) do
+    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
+    destination = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
 
-    if a == 0 do
-      instruction_pointer + 3
-    else
-      destination
-    end
+    %{computer |
+      instruction_pointer: (if (a==0), do: computer.instruction_pointer + 3, else: destination)
+    }
   end
 
-  def jump_if_false(instruction_pointer, memory, modes) do
-    a = read(memory, instruction_pointer + 1, modes <- 0)
-    destination = read(memory, instruction_pointer + 2, modes <- 1)
+  def jump_if_false(computer, modes) do
 
-    if a == 0 do
-      destination
-    else
-      instruction_pointer + 3
-    end
+    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
+    destination = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+
+    %{computer |
+      instruction_pointer: (if (a==0), do: destination, else: computer.instruction_pointer + 3)
+    }
   end
 
   def load(file \\ "day02_input.txt") do
