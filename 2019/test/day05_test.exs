@@ -3,8 +3,8 @@ defmodule Day05Test do
 
   test "Read and Write to IO" do
     assert ["hello"] ==
-      %{ IntcodeComputer.new([3, 0, 4, 0, 99]) | input: ["hello"]}
-        |> IntcodeComputer.execute()
+      IntcodeComputer.new([3, 0, 4, 0, 99])
+        |> IntcodeComputer.execute_program(["hello"])
         |> elem(1)
   end
 
@@ -62,9 +62,8 @@ defmodule Day05Test do
 
   test "run thermal radiator diagnostic" do
     output =
-      %{ IntcodeComputer.load("day05_input.txt") |
-         input: [5]}
-      |> IntcodeComputer.execute()
+      IntcodeComputer.load("day05_input.txt")
+      |> IntcodeComputer.execute_program([5])
       |> elem(1)
 
     assert output == [8_346_937]

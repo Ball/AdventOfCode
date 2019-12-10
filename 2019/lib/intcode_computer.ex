@@ -1,6 +1,6 @@
 defmodule IntcodeComputer do
   @enforce_keys [:memory]
-  defstruct [:memory, input: [], output: [], instruction_pointer: 0, relative_base: 0]
+  defstruct [:memory, output: self(), instruction_pointer: 0, relative_base: 0]
 
   def new(program) do
     %IntcodeComputer{
@@ -8,10 +8,19 @@ defmodule IntcodeComputer do
     }
   end
   def execute_program(memory, input \\ []) do
-    %{new(memory) |
-      input: input
-    }
-    |> execute()
+    pid = spawn(fn -> new(memory) |> execute() end)
+    Enum.each(input, (fn value -> send pid, {:input, value} end))
+    listen_for_output([])
+  end
+  def listen_for_output(output) do
+    receive do
+      {:end, memory} ->
+        IO.puts("end")
+        {memory, output}
+      {:output, value} ->
+        listen_for_output([value | output])
+    end
+
   end
 
   def execute(computer) do
@@ -21,7 +30,7 @@ defmodule IntcodeComputer do
 
     case {opcode, parameters} do
       {99, _} ->
-        {computer.memory, computer.output}
+        send computer.output, {:end, computer.memory}
 
       {1, modes} ->
         computer
@@ -100,20 +109,23 @@ defmodule IntcodeComputer do
   end
 
   def store_input(computer, modes) do
-    memory = write(computer, computer.instruction_pointer + 1, hd(computer.input), modes <- 0)
-    %{computer |
-      instruction_pointer: computer.instruction_pointer + 2,
-      memory: memory,
-      input: tl(computer.input)
-    }
+    receive do
+      {:input, value} ->
+        memory = write(computer, computer.instruction_pointer + 1, value, modes <- 0)
+        %{computer |
+          instruction_pointer: computer.instruction_pointer + 2,
+          memory: memory
+        }
+    end
   end
 
   def modes <- offset, do: modes |> Enum.at(offset, 0)
 
   def write_output(computer, modes) do
+    value = read(computer, computer.instruction_pointer + 1, modes <- 0)
+    send computer.output, value
     %{computer |
-      instruction_pointer: computer.instruction_pointer + 2,
-      output: [read(computer, computer.instruction_pointer + 1, modes <- 0) | computer.output]
+      instruction_pointer: computer.instruction_pointer + 2
     }
   end
 
