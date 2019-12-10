@@ -3,16 +3,16 @@ defmodule Day05Test do
 
   test "Read and Write to IO" do
     assert ["hello"] ==
-      %IntcodeComputer{memory: [3, 0, 4, 0, 99], input: ["hello"]}
+      %{ IntcodeComputer.new([3, 0, 4, 0, 99]) | input: ["hello"]}
         |> IntcodeComputer.execute()
         |> elem(1)
   end
 
   test "run immediate code" do
-    {memory, output} = %IntcodeComputer{memory: [1002, 4, 3, 4, 33]}
+    {memory, output} = IntcodeComputer.new([1002, 4, 3, 4, 33])
                         |> IntcodeComputer.execute()
     assert output == []
-    assert memory == [1002, 4, 3, 4, 99]
+    assert memory |> :array.to_list() == [1002, 4, 3, 4, 99]
   end
 
   test "Test Equal" do

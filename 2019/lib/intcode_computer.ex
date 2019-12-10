@@ -1,14 +1,21 @@
 defmodule IntcodeComputer do
   @enforce_keys [:memory]
-  defstruct [:memory, input: [], output: [], instruction_pointer: 0]
+  defstruct [:memory, input: [], output: [], instruction_pointer: 0, relative_base: 0]
 
+  def new(program) do
+    %IntcodeComputer{
+      memory: :array.from_list(program, 0),
+    }
+  end
   def execute_program(memory, input \\ []) do
-    %IntcodeComputer{memory: memory, input: input}
+    %{new(memory) |
+      input: input
+    }
     |> execute()
   end
 
   def execute(computer) do
-    raw_opcode = Enum.at(computer.memory, computer.instruction_pointer)
+    raw_opcode = :array.get(computer.instruction_pointer, computer.memory)
     opcode = rem(raw_opcode, 100)
     parameters = Integer.digits(div(raw_opcode, 100)) |> Enum.reverse()
 
@@ -26,9 +33,9 @@ defmodule IntcodeComputer do
         |> multiply(modes)
         |> execute()
 
-      {3, _} ->
+      {3, modes} ->
         computer
-        |> store_input()
+        |> store_input(modes)
         |> execute()
 
       {4, modes} ->
@@ -55,28 +62,48 @@ defmodule IntcodeComputer do
         computer
         |> equals(modes)
         |> execute()
+
+      {9, modes} ->
+        computer
+        |> adjust_relative_base(modes)
+        |> execute()
     end
   end
 
-  def read(memory, address, 0), do: indirect_read(memory, address)
-  def read(memory, address, _), do: direct_read(memory, address)
+  def read(computer, address, 0), do: indirect_read(computer.memory, address)
+  def read(computer, address, 1), do: direct_read(computer.memory, address)
+  def read(computer, address, 2), do: relative_read(computer, address)
+  def write(computer, address, value, 0), do: indirect_write(computer, address, value)
+  def write(computer, address, value, 2), do: relative_write(computer, address, value)
 
   def indirect_read(memory, address) do
-    Enum.at(memory, Enum.at(memory, address))
+    :array.get(:array.get(address, memory), memory)
+  end
+
+  def relative_read(computer, address) do
+    :array.get(:array.get(address, computer.memory) + computer.relative_base, computer.memory)
   end
 
   def direct_read(memory, address) do
-    Enum.at(memory, address)
+    :array.get(address, memory)
   end
 
-  def indirect_write(memory, address, value) do
-    List.replace_at(memory, Enum.at(memory, address), value)
+  def indirect_write(computer, address, value) do
+    :array.set(:array.get(address, computer.memory), value, computer.memory)
+  end
+  def direct_write(memory, address, value) do
+    :array.set(address, value, memory)
+  end
+  def relative_write(computer, address, value) do
+    addr = :array.get(address, computer.memory) + computer.relative_base
+    :array.set(addr, value, computer.memory)
   end
 
-  def store_input(computer) do
+  def store_input(computer, modes) do
+    memory = write(computer, computer.instruction_pointer + 1, hd(computer.input), modes <- 0)
     %{computer |
       instruction_pointer: computer.instruction_pointer + 2,
-      memory: indirect_write(computer.memory, computer.instruction_pointer + 1, hd(computer.input)),
+      memory: memory,
       input: tl(computer.input)
     }
   end
@@ -86,50 +113,52 @@ defmodule IntcodeComputer do
   def write_output(computer, modes) do
     %{computer |
       instruction_pointer: computer.instruction_pointer + 2,
-      output: [read(computer.memory, computer.instruction_pointer + 1, modes <- 0) | computer.output]
+      output: [read(computer, computer.instruction_pointer + 1, modes <- 0) | computer.output]
     }
   end
 
   def add(computer, modes) do
-    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
-    b = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+    a = read(computer, computer.instruction_pointer + 1, modes <- 0)
+    b = read(computer, computer.instruction_pointer + 2, modes <- 1)
     %{computer |
       instruction_pointer: computer.instruction_pointer + 4,
-      memory: indirect_write(computer.memory, computer.instruction_pointer  + 3, a + b)
+      memory: write(computer, computer.instruction_pointer  + 3, a + b, modes <- 2)
     }
   end
 
   def multiply(computer, modes) do
-    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
-    b = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+    a = read(computer, computer.instruction_pointer + 1, modes <- 0)
+    b = read(computer, computer.instruction_pointer + 2, modes <- 1)
     %{computer |
       instruction_pointer: computer.instruction_pointer + 4,
-      memory: indirect_write(computer.memory, computer.instruction_pointer + 3, a * b)
+      memory: write(computer, computer.instruction_pointer + 3, a * b, modes <- 2)
     }
   end
 
   def less_than(computer, modes) do
-    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
-    b = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+    a = read(computer, computer.instruction_pointer + 1, modes <- 0)
+    b = read(computer, computer.instruction_pointer + 2, modes <- 1)
+
+    memory = write(computer, computer.instruction_pointer + 3, if( a < b, do: 1, else: 0), modes <- 2)
 
     %{computer |
       instruction_pointer: computer.instruction_pointer + 4,
-      memory: indirect_write(computer.memory, computer.instruction_pointer + 3, if( a < b , do: 1, else: 0))
+      memory: memory
     }
   end
 
   def equals(computer, modes) do
-    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
-    b = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+    a = read(computer, computer.instruction_pointer + 1, modes <- 0)
+    b = read(computer, computer.instruction_pointer + 2, modes <- 1)
     %{computer|
       instruction_pointer: computer.instruction_pointer + 4,
-      memory: indirect_write(computer.memory, computer.instruction_pointer + 3, if(a == b, do: 1, else: 0))
+      memory: write(computer, computer.instruction_pointer + 3, if(a == b, do: 1, else: 0), modes <- 2)
     }
   end
 
   def jump_if_true(computer, modes) do
-    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
-    destination = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+    a = read(computer, computer.instruction_pointer + 1, modes <- 0)
+    destination = read(computer, computer.instruction_pointer + 2, modes <- 1)
 
     %{computer |
       instruction_pointer: (if (a==0), do: computer.instruction_pointer + 3, else: destination)
@@ -138,11 +167,18 @@ defmodule IntcodeComputer do
 
   def jump_if_false(computer, modes) do
 
-    a = read(computer.memory, computer.instruction_pointer + 1, modes <- 0)
-    destination = read(computer.memory, computer.instruction_pointer + 2, modes <- 1)
+    a = read(computer, computer.instruction_pointer + 1, modes <- 0)
+    destination = read(computer, computer.instruction_pointer + 2, modes <- 1)
 
     %{computer |
       instruction_pointer: (if (a==0), do: destination, else: computer.instruction_pointer + 3)
+    }
+  end
+
+  def adjust_relative_base(computer, modes) do
+    %{computer |
+      instruction_pointer: computer.instruction_pointer + 2,
+      relative_base: computer.relative_base + read(computer, computer.instruction_pointer + 1, modes <- 0)
     }
   end
 
@@ -153,18 +189,18 @@ defmodule IntcodeComputer do
     |> String.split(",", trim: true)
     |> Enum.map(&String.trim/1)
     |> Enum.map(&String.to_integer/1)
-    |> (fn memory -> %IntcodeComputer{memory: memory} end).()
+    |> IntcodeComputer.new()
   end
 
   def process(computer, noun, verb) do
     %{computer |
       memory: computer.memory
-        |> List.replace_at(1, noun)
-        |> List.replace_at(2, verb)
+        |> (fn a -> :array.set(1, noun, a)end).()
+        |> (fn a -> :array.set(2, verb, a)end).()
     }
     |> IntcodeComputer.execute()
     |> elem(0)
-    |> Enum.at(0)
+    |> (fn a -> :array.get(0, a) end).()
   end
 
   def process(noun, verb) do
