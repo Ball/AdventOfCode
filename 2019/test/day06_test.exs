@@ -1,5 +1,5 @@
 defmodule Day06Test do
-    use ExUnit.Case
+    use ExUnit.Case, async: true
 
     test "parse one orbit" do
       assert %{"B" => "COM"} == Day06.read_object("COM)B", %{})

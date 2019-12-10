@@ -1,5 +1,5 @@
 defmodule Day08Test do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "Load an Image" do
     image = "123456789012"

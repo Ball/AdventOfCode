@@ -1,3 +1,5 @@
+require IEx
+
 defmodule IntcodeComputer do
   @enforce_keys [:memory]
   defstruct [:memory, output: self(), instruction_pointer: 0, relative_base: 0]
@@ -5,18 +7,22 @@ defmodule IntcodeComputer do
   def new(program) do
     %IntcodeComputer{
       memory: :array.from_list(program, 0),
+      output: self()
     }
   end
-  def execute_program(memory, input \\ []) do
-    pid = spawn(fn -> new(memory) |> execute() end)
+  def execute_computer(computer, input \\[]) do
+    pid = spawn(fn -> computer |> execute() end)
     Enum.each(input, (fn value -> send pid, {:input, value} end))
     listen_for_output([])
+  end
+  def execute_program(memory, input \\ []) do
+    new(memory)
+    |> execute_computer(input)
   end
   def listen_for_output(output) do
     receive do
       {:end, memory} ->
-        IO.puts("end")
-        {memory, output}
+        {output, memory}
       {:output, value} ->
         listen_for_output([value | output])
     end
@@ -116,6 +122,8 @@ defmodule IntcodeComputer do
           instruction_pointer: computer.instruction_pointer + 2,
           memory: memory
         }
+    after
+      1_000 -> IEx.pry
     end
   end
 
@@ -123,7 +131,7 @@ defmodule IntcodeComputer do
 
   def write_output(computer, modes) do
     value = read(computer, computer.instruction_pointer + 1, modes <- 0)
-    send computer.output, value
+    send computer.output, {:output, value}
     %{computer |
       instruction_pointer: computer.instruction_pointer + 2
     }
@@ -205,13 +213,15 @@ defmodule IntcodeComputer do
   end
 
   def process(computer, noun, verb) do
-    %{computer |
+    computer = %{computer |
+      output: self(),
       memory: computer.memory
         |> (fn a -> :array.set(1, noun, a)end).()
         |> (fn a -> :array.set(2, verb, a)end).()
     }
-    |> IntcodeComputer.execute()
-    |> elem(0)
+    spawn(fn -> computer |> execute() end)
+    listen_for_output([])
+    |> elem(1)
     |> (fn a -> :array.get(0, a) end).()
   end
 

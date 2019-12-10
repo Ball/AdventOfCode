@@ -4,21 +4,21 @@ defmodule Day02Test do
     test "halt opcode" do
         assert [99] == IntcodeComputer.new([99])
                         |> IntcodeComputer.execute()
-                        |> elem(0)
+                        |> elem(1)
                         |> :array.to_list()
     end
     test "add opcode" do
         assert [1,9,10,70,99,3,11,0,99,30,40,50] ==
             IntcodeComputer.new([1,9,10,3,99,3,11,0,99,30,40,50])
             |> IntcodeComputer.execute()
-            |> elem(0)
+            |> elem(1)
             |> :array.to_list()
     end
     test "add and multiply" do
         assert [3500,9,10,70,2,3,11,0,99,30,40,50] ==
             IntcodeComputer.new([1,9,10,3,2,3,11,0,99,30,40,50])
             |> IntcodeComputer.execute()
-            |> elem(0)
+            |> elem(1)
             |> :array.to_list()
     end
     test "Load and execute" do

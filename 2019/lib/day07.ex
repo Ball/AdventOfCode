@@ -11,11 +11,9 @@ defmodule Day07 do
     by_stage(phases, computer, amplify(phase, computer, signal))
   end
   def amplify(phase, computer, signal) do
-    %{ computer |
-      input: [phase, signal]
-    }
-    |>IntcodeComputer.execute()
-    |> elem(1)
+    computer
+    |>IntcodeComputer.execute_computer([phase, signal])
+    |> elem(0)
     |> hd()
   end
   def all_phases() do

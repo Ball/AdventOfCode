@@ -1,5 +1,6 @@
 defmodule Day10Test do
-    use ExUnit.Case
+    use ExUnit.Case, async: true
+
     @map1 """
 .#..#
 .....
