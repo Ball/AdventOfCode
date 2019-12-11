@@ -96,7 +96,7 @@ defmodule Day07 do
             send out, {:signal, value, amplifier.name}
           end
           loop(amplifier)
-        {:signal, value, name} ->
+        {:signal, value, _} ->
           send amplifier.cpu_pid, {:input, value}
           loop(amplifier)
         {:end, _} ->
