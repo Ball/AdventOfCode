@@ -15,6 +15,7 @@ defmodule IntcodeComputer do
     Enum.each(input, (fn value -> send pid, {:input, value} end))
     listen_for_output([])
   end
+
   def execute_program(memory, input \\ []) do
     new(memory)
     |> execute_computer(input)
@@ -122,8 +123,6 @@ defmodule IntcodeComputer do
           instruction_pointer: computer.instruction_pointer + 2,
           memory: memory
         }
-    after
-      1_000 -> IEx.pry
     end
   end
 
