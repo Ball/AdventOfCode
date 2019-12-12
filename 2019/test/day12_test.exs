@@ -53,23 +53,41 @@ defmodule Day12Test do
     assert 7758 == Day12.starter_system() |> Day12.simulate(1000) |> Day12.system_energy()
   end
 
-#   test "repeating history" do
-#     assert 2772 ==
-#              [
-#                Moon.new({-1, 0, 2}),
-#                Moon.new({2, -10, -7}),
-#                Moon.new({4, -8, 8}),
-#                Moon.new({3, 5, -1})
-#              ]
-#              |> Day12.how_long_until_matching()
+  test "repeating history" do
+    system1 = [
+      Moon.new({-1, 0, 2}),
+      Moon.new({2, -10, -7}),
+      Moon.new({4, -8, 8}),
+      Moon.new({3, 5, -1})
+    ]
 
-#     # assert 4_686_774_924 ==
-#     #          [
-#     #            Moon.new({-8, -10, 0}),
-#     #            Moon.new({5, 5, 10}),
-#     #            Moon.new({2, -7, 3}),
-#     #            Moon.new({9, -8, -3})
-#     #          ]
-#     #          |> Day12.how_long_until_matching()
-#   end
+    system2 = [
+      Moon.new({-8, -10, 0}),
+      Moon.new({5, 5, 10}),
+      Moon.new({2, -7, 3}),
+      Moon.new({9, -8, -3})
+    ]
+
+    assert 18 == Day12.period_for(system1, 0)
+    assert 28 == Day12.period_for(system1, 1)
+    assert 44 == Day12.period_for(system1, 2)
+
+    assert 2028 == Day12.period_for(system2, 0)
+    assert 5898 == Day12.period_for(system2, 1)
+    assert 4702 == Day12.period_for(system2, 2)
+
+    [2028, 5898, 4702]
+    assert 1_993_524 == Day12.lcm(2028, 5898)
+    assert 4_686_774_924 == Day12.lcm(4702, 1_993_524)
+
+    assert 2772 ==
+             system1
+             |> Day12.how_long_until_matching()
+
+    assert 4_686_774_924 ==
+             system2
+             |> Day12.how_long_until_matching()
+
+    assert 354_540_398_381_256 = Day12.starter_system() |> Day12.how_long_until_matching()
+  end
 end

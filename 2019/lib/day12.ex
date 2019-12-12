@@ -8,22 +8,37 @@ end
 
 defmodule Day12 do
 
-  def how_long_until_matching(moons) do
-    moons
-    |> step_velocity()
-    |> step_position()
-    |> how_long_until_matching(moons, 1)
-  end
-  def how_long_until_matching(moons, starting, n) do
-    if moons == starting do
-        n
-    else
+
+    def view_into(moons, coord) do
+        moons
+        |> Enum.map(fn m -> [m.position |> elem(coord), m.velocity |> elem(coord)] end)
+    end
+    def period_for(moons, coord) do
+        starting = moons |> view_into(coord)
         moons
         |> step_velocity()
         |> step_position()
-        |> how_long_until_matching(starting, n+1)
+        |> period_for(starting, coord, 1)
     end
+    def period_for(moons, starting, coord, n) do
+        if view_into(moons, coord) == starting do
+            n
+        else
+            moons
+            |> step_velocity()
+            |> step_position()
+            |> period_for(starting, coord, n+1)
+        end
+    end
+  def how_long_until_matching(moons) do
+    [0,1,2]
+    |> Enum.map(&(period_for(moons, &1)))
+    |> Enum.reduce(&(lcm(&1, &2)))
   end
+
+  def lcm(0, 0), do: 0
+  def lcm(a, b), do: div((a*b),Integer.gcd(a,b))
+
   def starter_system() do
     [
       Moon.new({9, 13, -8}),
