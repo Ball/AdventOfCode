@@ -20,13 +20,13 @@ defmodule Day13 do
         |> Enum.map(&String.trim/1)
         |> Enum.map(&String.to_integer/1)
         |> (fn program -> program |> List.replace_at(0, 2) end).()
-        |>Day13.ScreenDriver.with_program()
+        |> Day13.ScreenDriver.with_program()
         |> elem(1)
 
     end
 
     defmodule ScreenDriver do
-        defstruct [:computer, :cpu_pid, :parent, :pixels, :paddle, :ball, :old_ball, score: 0]
+        defstruct [:computer, :cpu_pid, :parent, :pixels, :paddle, :ball, score: 0]
 
         def with_program(program) do
             driver = %ScreenDriver {
@@ -58,7 +58,7 @@ defmodule Day13 do
         def wait_for_y(driver,x) do
             receive do
                 {:output, y} ->
-                    if {1,0} == {x,y} do
+                    if {-1,0} == {x,y} do
                         driver
                         |> wait_for_score(x,y)
                     else
@@ -80,12 +80,22 @@ defmodule Day13 do
         end
         def wait_for_block(driver, x, y) do
             receive do
+                {:output, 3} ->
+                    %ScreenDriver{ driver|
+                        pixels: Map.put(driver.pixels, {x,y}, 3),
+                        paddle: {x,y}
+                    }
+                    |> (fn d ->
+                        d end).()
+                    |> wait_for_x()
+
                 {:output, 4} ->
                     %ScreenDriver{ driver |
-                        pixels: Map.put(driver.pixels, {x,y}, 3),
-                        old_ball: driver.ball,
+                        pixels: Map.put(driver.pixels, {x,y}, 4),
                         ball: {x,y}
                     }
+                    |> (fn d ->
+                        d end).()
                     |> move()
                     |> wait_for_x()
                 {:output, tile_id} ->
@@ -99,17 +109,24 @@ defmodule Day13 do
         end
         def move(driver) do
             cond do
-                driver.old_ball == nil ->
-                    send(driver.cpu_pid, {:input, -1})
-                elem(driver.old_ball, 0) < elem(driver.ball, 0) ->
-                    send(driver.cpu_pid, {:input, -1})
-                elem(driver.old_ball, 0) > elem(driver.ball, 0) ->
-                    send(driver.cpu_pid, {:input, 1})
-                true ->
-                    send(driver.cpu_pid, {:input, 0})
+                is_right(driver.ball,driver.paddle) ->
+                    move_left(driver)
+                is_left(driver.ball, driver.paddle) ->
+                    move_right(driver)
+                is_under(driver.ball, driver.paddle) ->
+                    stay(driver)
             end
             driver
         end
+        def is_under({x1,_}, {x2,_}), do: x1 == x2
+        def is_under(_, nil), do: true
+        def is_left({x1,_}, {x2,_}), do: x1 > x2
+        def is_left(_, nil), do: false
+        def is_right({x1,_}, {x2,_}), do: x1 < x2
+        def is_right(_, nil), do: false
+        def move_left(%ScreenDriver{cpu_pid: pid}), do: send pid, {:input, -1}
+        def move_right(%ScreenDriver{cpu_pid: pid}), do: send pid, {:input, 1}
+        def stay(%ScreenDriver{cpu_pid: pid}), do: send pid, {:input, 0}
         def report(driver) do
             send(driver.parent, {:pixels, driver.pixels, :score, driver.score})
         end
