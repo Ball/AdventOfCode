@@ -85,6 +85,6 @@ defmodule Day14Test do
              Day14.read_recipies(@recipie4)
              |> Day14.cost_of([{"FUEL", 1}])
 
-    assert 0 == Day14.read_recipies() |> Day14.cost_of([{"FUEL", 1}])
+    assert 319014 == Day14.read_recipies() |> Day14.cost_of([{"FUEL", 1}])
   end
 end

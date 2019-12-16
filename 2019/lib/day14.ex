@@ -26,7 +26,7 @@ defmodule Day14 do
 
   def cost_of(recipies, to_make), do: cost_of(recipies, to_make, 0, %{})
 
-  def cost_of(_, [], ores, l) do
+  def cost_of(_, [], ores, _) do
     ores
   end
 
@@ -41,7 +41,7 @@ defmodule Day14 do
 
     batches = number_of_batches(qty, still_needed)
 
-    leftover_amomunt = qty * batches - ammount
+    leftover_amomunt = qty * batches - still_needed
 
     new_to_make =
       ingredients
@@ -49,8 +49,6 @@ defmodule Day14 do
 
     added_leftovers =
       still_leftovers
-      |> Map.get_and_update(chemical, fn i -> if i == nil, do: {i, 0}, else: {i, i} end)
-      |> elem(1)
       |> Map.get_and_update(chemical, fn i -> {i, i + leftover_amomunt} end)
       |> elem(1)
 
@@ -58,15 +56,13 @@ defmodule Day14 do
   end
 
   def pick_from_leftovers(chemical, ammount, leftovers) do
-    l =
-      leftovers
-      |> Map.get_and_update(chemical, fn i -> if i == nil, do: {i, 0}, else: {i, i} end)
-      |> elem(1)
-
-    if l[chemical] < ammount do
-      {ammount - l[chemical], l |> Map.put(chemical, 0)}
-    else
-      {0, l |> Map.get_and_update(chemical, fn i -> {i, i - ammount} end) |> elem(1)}
+    cond do
+        ! Map.has_key?(leftovers, chemical) ->
+            {ammount, leftovers |> Map.put(chemical, 0)}
+        leftovers[chemical] < ammount ->
+            {ammount - leftovers[chemical], leftovers|> Map.put(chemical, 0)}
+        true ->
+            {0, leftovers |> Map.get_and_update(chemical, fn i -> {i, i - ammount} end) |> elem(1)}
     end
   end
 
