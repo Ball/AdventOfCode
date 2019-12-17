@@ -78,4 +78,8 @@ defmodule Day14 do
 
     batches_to_make
   end
+
+  def fuel_for_ore(recipies, ore) do
+    0
+  end
 end

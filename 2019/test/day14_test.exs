@@ -85,6 +85,22 @@ defmodule Day14Test do
              Day14.read_recipies(@recipie4)
              |> Day14.cost_of([{"FUEL", 1}])
 
-    assert 319014 == Day14.read_recipies() |> Day14.cost_of([{"FUEL", 1}])
+    assert 319_014 == Day14.read_recipies() |> Day14.cost_of([{"FUEL", 1}])
+  end
+
+  @tag skip: "Not yet"
+  test "how much fuel from 1000000000000 ore?" do
+    assert 82_892_753 ==
+             Day14.read_recipies(@recipie2)
+             |> Day14.fuel_for_ore(1_000_000_000_000)
+    assert 5586022 ==
+            Day14.read_recipies(@recipie3)
+            |> Day14.fuel_for_ore(1_000_000_000_000)
+    assert 460664 ==
+            Day14.read_recipies(@recipie4)
+            |> Day14.fuel_for_ore(1_000_000_000_000)
+    assert 0 ==
+            Day14.read_recipies()
+            |> Day14.fuel_for_ore(1_000_000_000_000)
   end
 end
