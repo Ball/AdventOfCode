@@ -1,7 +1,8 @@
-# defmodule Day15Test do
-#    use ExUnit.Case, async: true
+defmodule Day15Test do
+   use ExUnit.Case, async: true
 
-#    true "" do
+#    @tag skip: "not yet"
+#    test "" do
 #         {sensor, walls} = Day15.run_robot()
 #    end
-# end
+end
