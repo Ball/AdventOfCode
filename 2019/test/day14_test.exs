@@ -88,8 +88,30 @@ defmodule Day14Test do
     assert 319_014 == Day14.read_recipies() |> Day14.cost_of([{"FUEL", 1}])
   end
 
-  @tag skip: "Not yet"
+
   test "how much fuel from 1000000000000 ore?" do
+
+
+    # assert 0 == div(165, 1_000_000_000_000)
+
+    # assert 0 == @recipie2 |> Day14.read_recipies() |> Day14.cost_of([{"FUEL", 1}])
+
+    # r = Day14.read_recipies(@recipie2)
+
+    # {count, _leftovers} = Day14.read_recipies(@recipie2)
+    #   |> Day14.cost_of([{"FUEL", 1}], 0, %{})
+    # assert count == 13312
+    # to_make = div(1_000_000_000_000, 13312)
+
+    # {c, l} = Day14.cost_of(r, [{"FUEL", to_make}], 0, %{})
+
+    # assert c == 906233526653
+    # assert to_make == 75120192
+    # assert 7043755 == div(1_000_000_000_000 - c, 13312)
+    # # assert l == %{}
+
+    # assert 999999999076 == Day14.cost_of(r, [{"FUEL", 82_892_753}] )
+
     assert 82_892_753 ==
              Day14.read_recipies(@recipie2)
              |> Day14.fuel_for_ore(1_000_000_000_000)
@@ -99,7 +121,7 @@ defmodule Day14Test do
     assert 460664 ==
             Day14.read_recipies(@recipie4)
             |> Day14.fuel_for_ore(1_000_000_000_000)
-    assert 0 ==
+    assert 4076490 ==
             Day14.read_recipies()
             |> Day14.fuel_for_ore(1_000_000_000_000)
   end

@@ -24,10 +24,10 @@ defmodule Day14 do
     {formula, String.to_integer(ammount)}
   end
 
-  def cost_of(recipies, to_make), do: cost_of(recipies, to_make, 0, %{})
+  def cost_of(recipies, to_make), do: cost_of(recipies, to_make, 0, %{}) |> elem(0)
 
-  def cost_of(_, [], ores, _) do
-    ores
+  def cost_of(_, [], ores, leftovers) do
+    {ores, leftovers}
   end
 
   def cost_of(recipies, [{"ORE", ammount} | to_make], ores, leftovers) do
@@ -80,6 +80,26 @@ defmodule Day14 do
   end
 
   def fuel_for_ore(recipies, ore) do
-    0
+
+    cost = cost_of(recipies, [{"FUEL", 1}])
+    guess = div(ore, cost)
+    fuel_for_ore(recipies, ore, cost, guess)
+  end
+
+  def fuel_for_ore(recipies, ore, cost, guess) do
+    guessed_ore = cost_of(recipies, [{"FUEL",guess}])
+
+    distance = div(ore - guessed_ore, cost)
+
+    if (ore-guessed_ore) < cost do
+      if cost_of(recipies, [{"FUEL", guess+1}]) > ore do
+        guess
+      else
+        guess + 1
+      end
+    else
+      IO.puts("guessing #{guess} but could try #{distance} more")
+      fuel_for_ore(recipies, ore, cost, guess + distance)
+    end
   end
 end

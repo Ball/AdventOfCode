@@ -1,7 +1,7 @@
 defmodule Day16Test do
   use ExUnit.Case, async: true
 
-  #  @tag skip: "Too long"
+   @tag skip: "Too long"
   test "phases" do
     # assert 48_226_158 == Day16.phases(Integer.digits(12_345_678), 1) |> Integer.undigits()
     # assert 34_040_438 == Day16.phases(Integer.digits(12_345_678), 2) |> Integer.undigits()
