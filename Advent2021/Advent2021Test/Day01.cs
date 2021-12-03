@@ -3,7 +3,7 @@ global using Advent2021;
 global using FluentAssertions;
 global using System.Linq;
 namespace Advent2021Test;
-public class SonarTest
+public class Day01
 {
     [Fact]
     public void ShouldReportIncrements()

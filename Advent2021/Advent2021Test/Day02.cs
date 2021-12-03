@@ -1,19 +1,6 @@
 namespace Advent2021Test;
 
-public class GuidanceTest{
-    [Fact(Skip="Changed")]
-    public void ShouldStepDown(){
-        var guidance = new Guidance();
-        guidance.Step("down 5");
-        guidance.Depth.Should().Be(5);
-    }
-    [Fact(Skip="Changed")]
-    public void ShouldStepDownThenUp(){
-        var guidance = new Guidance();
-        guidance.Step("down 5");
-        guidance.Step("up 2");
-        guidance.Depth.Should().Be(3);
-    }
+public class Day02{
     [Fact]
     public void ShouldStepForward(){
         var guidance = new Guidance();
