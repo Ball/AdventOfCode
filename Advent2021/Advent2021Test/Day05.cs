@@ -1,18 +1,19 @@
+using Sprache;
 namespace Advent2021Test;
 
 public class Day05 {
     [Fact]
     public void VentLineDecoding(){
-        var line = new VentLine("0,9 -> 5,9");
+        var line = VentLine.VentLineParser.Parse("0,9 -> 5,9");
         line.MaxX.Should().Be(5);
         line.MaxY.Should().Be(9);
 
         var range = line.VentRange().ToArray();
 
-        line = new VentLine("7,0 -> 7,4");
+        line = VentLine.VentLineParser.Parse("7,0 -> 7,4");
         range = line.VentRange().ToArray();
 
-        line = new VentLine("9,7 -> 7,9");
+        line = VentLine.VentLineParser.Parse("9,7 -> 7,9");
         range = line.VentRange().ToArray();
     }
     [Fact]
@@ -27,19 +28,19 @@ public class Day05 {
 3,4 -> 1,4
 0,0 -> 8,8
 5,5 -> 8,2";
-        var map = new VentMap(input.Split("\n"));
+        var map = new VentMap(input);
         map.DangerousPoints.Should().HaveCount(12); 
     }
     [Fact(Skip = "Superseded")]
     public void Day05Part01(){
-        var lines = System.IO.File.ReadAllLines("data/day05.txt");
+        var lines = System.IO.File.ReadAllText("data/day05.txt");
         var map = new VentMap(lines);
         map.DangerousPoints.Should().HaveCount(6005);
 
     }
     [Fact]
     public void Day05Part02(){
-        var lines = System.IO.File.ReadAllLines("data/day05.txt");
+        var lines = System.IO.File.ReadAllText("data/day05.txt");
         var map = new VentMap(lines);
         map.DangerousPoints.Should().HaveCount(23864);
 
