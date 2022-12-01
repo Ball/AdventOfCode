@@ -1,0 +1,55 @@
+#!markdown
+
+In code blocks, you can use `#r nuget : Newtonsoft.JSON` to bring in nuget packages.
+
+To reference a shared file, you can use
+``` F#
+#load "Script1.fsx"
+open Script1
+```
+
+#!fsharp
+
+let input = System.IO.File.ReadAllText("Day01.txt")
+
+let testInput = """1000
+2000
+3000
+
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000"""
+
+#!fsharp
+
+#r "nuget: FParsec"
+open FParsec
+
+let digits = manyChars
+let elfPack : Parser<int32 list, unit> = sepEndBy pint32 newline
+let packs : Parser<int32 list list, unit> = sepEndBy elfPack newline
+let defaultedValue (r:ParserResult<'a, unit>) : 'a =
+    match r with
+    | Success (x,_,_) -> x
+    | Failure _ -> Unchecked.defaultof<'a>
+let runParser p s = run p s |> defaultedValue 
+let test p s =
+    match run p s with
+    | Success (x,_,_) -> sprintf "Success: %A" x
+    | Failure (x,_,_) -> sprintf "Failed: %s" x
+
+#!fsharp
+
+input
+|> runParser packs
+|> List.map (List.reduce (+))
+|> List.sortByDescending id
+|> List.take 3
+|> List.reduce (+)
