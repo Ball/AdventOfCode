@@ -1,0 +1,43 @@
+#!markdown
+
+# Day 03
+
+#!fsharp
+
+// Load packages and helper code
+#r "nuget: FParsec"
+#load "ParserHelpers.fsx"
+open FParsec
+
+#!markdown
+
+## Problem Input
+
+#!fsharp
+
+let input = System.IO.File.ReadAllText("Day03.txt")
+let testInput = """
+"""
+
+#!markdown
+
+## Process Input
+
+#!fsharp
+
+// Expected Types
+
+// Parsers
+
+// test $PARSER testInput
+
+#!markdown
+
+## Operate on Input Values 
+
+#!fsharp
+
+// functions
+
+// process values
+input

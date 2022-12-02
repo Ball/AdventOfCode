@@ -1,12 +1,17 @@
 #!markdown
 
-In code blocks, you can use `#r nuget : Newtonsoft.JSON` to bring in nuget packages.
+# Day 01 - Counting Calories
 
-To reference a shared file, you can use
-``` F#
-#load "Script1.fsx"
-open Script1
-```
+#!fsharp
+
+// Load packages and helper code
+#r "nuget: FParsec"
+open FParsec
+#load "ParserHelpers.fsx"
+
+#!markdown
+
+# Problem Input
 
 #!fsharp
 
@@ -27,10 +32,11 @@ let testInput = """1000
 
 10000"""
 
-#!fsharp
+#!markdown
 
-#r "nuget: FParsec"
-open FParsec
+## Process Input
+
+#!fsharp
 
 let elfPack : Parser<int32 list, unit> = sepEndBy pint32 newline
 let packs : Parser<int32 list list, unit> = sepEndBy elfPack newline
@@ -43,6 +49,10 @@ let test p s =
     match run p s with
     | Success (x,_,_) -> sprintf "Success: %A" x
     | Failure (x,_,_) -> sprintf "Failed: %s" x
+
+#!markdown
+
+## Operate on Input values
 
 #!fsharp
 

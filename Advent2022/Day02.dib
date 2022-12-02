@@ -1,3 +1,18 @@
+#!markdown
+
+# Day 02 - Rock Paper Scissors Tournament
+
+#!fsharp
+
+// Load packages and helper code
+#r "nuget: FParsec"
+#load "ParserHelpers.fsx"
+open FParsec
+
+#!markdown
+
+## Problem Input
+
 #!fsharp
 
 let input = System.IO.File.ReadAllText("Day02.txt")
@@ -5,11 +20,11 @@ let testInput = """A Y
 B X
 C Z"""
 
+#!markdown
+
+## Process Input
+
 #!fsharp
-
-#r "nuget: FParsec"
-
-open FParsec
 
 type Play = Rock
           | Paper
@@ -33,16 +48,12 @@ let elfPlay : Parser<Play, unit> = (satisfy <| isAnyOf "ABC") |>> decodeElf
 let myPlay : Parser<Outcome, unit> = (satisfy <| isAnyOf "XYZ") |>> decodeSelf
 let round : Parser<Play * Outcome, unit> = (elfPlay .>> spaces1 ).>>. myPlay
 let history : Parser<(Play * Outcome) list, unit> = sepEndBy round newline
-let defaultedValue (r:ParserResult<'a, unit>) : 'a =
-    match r with
-    | Success (x,_,_) -> x
-    | Failure _ -> Unchecked.defaultof<'a>
-let runParser p s = run p s |> defaultedValue 
-let test p s =
-    match run p s with
-    | Success (x,_,_) -> sprintf "Success: %A" x
-    | Failure (x,_,_) -> sprintf "Failed: %s" x
+
 test history testInput
+
+#!markdown
+
+## Operate on Input Values
 
 #!fsharp
 
