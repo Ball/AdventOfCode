@@ -1,0 +1,77 @@
+#!fsharp
+
+let input = System.IO.File.ReadAllText("Day02.txt")
+let testInput = """A Y
+B X
+C Z"""
+
+#!fsharp
+
+#r "nuget: FParsec"
+
+open FParsec
+
+type Play = Rock
+          | Paper
+          | Scissors
+type Outcome = Win
+             | Lose
+             | Draw
+let decodeElf c =
+    match c with
+    | 'A' -> Rock
+    | 'B' -> Paper
+    | 'C' -> Scissors   
+    | _ -> failwith "Unknown elf play"
+let decodeSelf c =
+    match c with
+    | 'X' -> Lose
+    | 'Y' -> Draw
+    | 'Z' -> Win
+    | _ -> failwith "Unknown own plays"
+let elfPlay : Parser<Play, unit> = (satisfy <| isAnyOf "ABC") |>> decodeElf
+let myPlay : Parser<Outcome, unit> = (satisfy <| isAnyOf "XYZ") |>> decodeSelf
+let round : Parser<Play * Outcome, unit> = (elfPlay .>> spaces1 ).>>. myPlay
+let history : Parser<(Play * Outcome) list, unit> = sepEndBy round newline
+let defaultedValue (r:ParserResult<'a, unit>) : 'a =
+    match r with
+    | Success (x,_,_) -> x
+    | Failure _ -> Unchecked.defaultof<'a>
+let runParser p s = run p s |> defaultedValue 
+let test p s =
+    match run p s with
+    | Success (x,_,_) -> sprintf "Success: %A" x
+    | Failure (x,_,_) -> sprintf "Failed: %s" x
+test history testInput
+
+#!fsharp
+
+let scorePlay r =
+    match r with
+    | Rock -> 1
+    | Paper -> 2
+    | Scissors -> 3
+
+let scoreWin (_,s) =
+    match s with
+    | Win -> 6
+    | Lose -> 0
+    | Draw -> 3
+let translateFrom (e,s) =
+    match (s,e) with
+    | Draw,_ -> e
+    | Win, Rock -> Paper
+    | Win, Paper -> Scissors
+    | Win, Scissors -> Rock
+    | Lose, Rock -> Scissors
+    | Lose, Paper -> Rock
+    | Lose, Scissors -> Paper
+
+let scoreRound r =
+    (scoreWin r ) + (translateFrom r |> scorePlay)
+
+input
+|> run history
+|> defaultedValue
+|> List.map scoreRound
+|> List.sum
