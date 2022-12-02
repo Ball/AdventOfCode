@@ -22,16 +22,15 @@ C Z"""
 
 #!markdown
 
-## Process Input
+# Part 01 - Knowing what they play, and what I play
+
+## Ready strategy guide
 
 #!fsharp
 
 type Play = Rock
           | Paper
           | Scissors
-type Outcome = Win
-             | Lose
-             | Draw
 let decodeElf c =
     match c with
     | 'A' -> Rock
@@ -40,20 +39,20 @@ let decodeElf c =
     | _ -> failwith "Unknown elf play"
 let decodeSelf c =
     match c with
-    | 'X' -> Lose
-    | 'Y' -> Draw
-    | 'Z' -> Win
+    | 'X' -> Rock
+    | 'Y' -> Paper
+    | 'Z' -> Scissors
     | _ -> failwith "Unknown own plays"
 let elfPlay : Parser<Play, unit> = (satisfy <| isAnyOf "ABC") |>> decodeElf
-let myPlay : Parser<Outcome, unit> = (satisfy <| isAnyOf "XYZ") |>> decodeSelf
-let round : Parser<Play * Outcome, unit> = (elfPlay .>> spaces1 ).>>. myPlay
-let history : Parser<(Play * Outcome) list, unit> = sepEndBy round newline
+let myPlay : Parser<Play, unit> = (satisfy <| isAnyOf "XYZ") |>> decodeSelf
+let round : Parser<Play * Play, unit> = (elfPlay .>> spaces1 ).>>. myPlay
+let history : Parser<(Play * Play) list, unit> = sepEndBy round newline
 
 test history testInput
 
 #!markdown
 
-## Operate on Input Values
+## Score the game
 
 #!fsharp
 
@@ -62,6 +61,55 @@ let scorePlay r =
     | Rock -> 1
     | Paper -> 2
     | Scissors -> 3
+
+let scoreWin r =
+    match r with
+    | Rock, Rock -> 3
+    | Paper, Paper -> 3
+    | Scissors, Scissors -> 3
+    | Rock, Paper -> 6
+    | Paper, Scissors -> 6
+    | Scissors, Rock -> 6
+    | _ -> 0
+
+let scoreRound r =
+    (scoreWin r ) + (r |> snd |> scorePlay)
+
+input
+|> run history
+|> defaultedValue
+|> List.map scoreRound
+|> List.sum
+
+#!markdown
+
+# Part 02 - Knowing how to play, not what
+
+## Reading opponent and WLD
+
+#!fsharp
+
+type Outcome = Win
+             | Lose
+             | Draw
+
+let decodeSelf c =
+    match c with
+    | 'X' -> Lose
+    | 'Y' -> Draw
+    | 'Z' -> Win
+    | _ -> failwith "Unknown own plays"
+let myPlay : Parser<Outcome, unit> = (satisfy <| isAnyOf "XYZ") |>> decodeSelf
+let round : Parser<Play * Outcome, unit> = (elfPlay .>> spaces1 ).>>. myPlay
+let history : Parser<(Play * Outcome) list, unit> = sepEndBy round newline
+
+test history testInput
+
+#!markdown
+
+## rescore strategy guide
+
+#!fsharp
 
 let scoreWin (_,s) =
     match s with

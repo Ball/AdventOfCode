@@ -34,6 +34,8 @@ let testInput = """1000
 
 #!markdown
 
+# Part 01 - Total Calories of Elf with Most Calories
+
 ## Process Input
 
 #!fsharp
@@ -51,6 +53,19 @@ let test p s =
     | Failure (x,_,_) -> sprintf "Failed: %s" x
 
 #!markdown
+
+## Operate on Input values
+
+#!fsharp
+
+input
+|> runParser packs
+|> List.map (List.reduce (+))
+|> List.max
+
+#!markdown
+
+# Part 2 - Total Calories of Three Most Caloric Elves
 
 ## Operate on Input values
 
