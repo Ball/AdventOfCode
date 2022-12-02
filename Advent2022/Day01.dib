@@ -32,7 +32,6 @@ let testInput = """1000
 #r "nuget: FParsec"
 open FParsec
 
-let digits = manyChars
 let elfPack : Parser<int32 list, unit> = sepEndBy pint32 newline
 let packs : Parser<int32 list list, unit> = sepEndBy elfPack newline
 let defaultedValue (r:ParserResult<'a, unit>) : 'a =
