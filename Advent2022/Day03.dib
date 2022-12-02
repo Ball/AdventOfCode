@@ -2,12 +2,15 @@
 
 # Day 03
 
+see [F# Interactive](https://learn.microsoft.com/en-us/dotnet/fsharp/tools/fsharp-interactive/) for details on loading external code
+
 #!fsharp
 
 // Load packages and helper code
 #r "nuget: FParsec"
-#load "ParserHelpers.fsx"
+#r "bin/Debug/net7.0/Advent2022.dll"
 open FParsec
+open Advent2022.ParserUtils
 
 #!markdown
 
@@ -24,6 +27,8 @@ let testInput = """
 # Part 01 - 
 
 ## Process Input
+
+see [FParsec](http://www.quanttec.com/fparsec/reference/primitives.html) for help
 
 #!fsharp
 

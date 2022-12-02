@@ -6,8 +6,8 @@
 
 // Load packages and helper code
 #r "nuget: FParsec"
+#r "bin/Debug/net7.0/Advent2022.dll"
 open FParsec
-#load "ParserHelpers.fsx"
 
 #!markdown
 
