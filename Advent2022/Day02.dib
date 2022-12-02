@@ -46,7 +46,7 @@ let decodeSelf c =
     | _ -> failwith "Unknown own plays"
 let elfPlay : Parser<Play, unit> = (satisfy <| isAnyOf "ABC") |>> decodeElf
 let myPlay : Parser<Play, unit> = (satisfy <| isAnyOf "XYZ") |>> decodeSelf
-let round : Parser<Play * Play, unit> = (elfPlay .>> spaces1 ).>>. myPlay
+let round : Parser<Play * Play, unit> = elfPlay .>> spaces1 .>>. myPlay
 let history : Parser<(Play * Play) list, unit> = sepEndBy round newline
 
 test history testInput
@@ -101,7 +101,7 @@ let decodeSelf c =
     | 'Z' -> Win
     | _ -> failwith "Unknown own plays"
 let myPlay : Parser<Outcome, unit> = (satisfy <| isAnyOf "XYZ") |>> decodeSelf
-let round : Parser<Play * Outcome, unit> = (elfPlay .>> spaces1 ).>>. myPlay
+let round : Parser<Play * Outcome, unit> = elfPlay .>> spaces1 .>>. myPlay
 let history : Parser<(Play * Outcome) list, unit> = sepEndBy round newline
 
 test history testInput
