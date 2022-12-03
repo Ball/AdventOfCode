@@ -4,14 +4,6 @@
 
 see [F# Interactive](https://learn.microsoft.com/en-us/dotnet/fsharp/tools/fsharp-interactive/) for details on loading external code
 
-#!fsharp
-
-// Load packages and helper code
-#r "nuget: FParsec"
-#r "bin/Debug/net7.0/Advent2022.dll"
-open FParsec
-open Advent2022.ParserUtils
-
 #!markdown
 
 ## Problem Input
@@ -19,8 +11,12 @@ open Advent2022.ParserUtils
 #!fsharp
 
 let input = System.IO.File.ReadAllText("Day03.txt")
-let testInput = """
-"""
+let testInput = """vJrwpWtwJgWrhcsFMMfFFhFp
+jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+PmmdzqPrVvPwwTWBwg
+wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+ttgJtRGJQctTZtZT
+CrZsJsPPZsGzwwsLwLmpwMDw"""
 
 #!markdown
 
@@ -28,15 +24,18 @@ let testInput = """
 
 ## Process Input
 
-see [FParsec](http://www.quanttec.com/fparsec/reference/primitives.html) for help
-
 #!fsharp
 
 // Expected Types
+type Rucksack = char seq * char seq
+let toRucksack (input: string) : Rucksack =
+    let part1 = input.Length / 2
+    let part2 = input.Length - part1
+    ( input.Substring(0, part1)
+    , input.Substring(part1, part2)
+    )
 
-// Parsers
-
-// test $PARSER testInput
+toRucksack "vJrwpWtwJgWrhcsFMMfFFhFp"
 
 #!markdown
 
@@ -45,10 +44,35 @@ see [FParsec](http://www.quanttec.com/fparsec/reference/primitives.html) for hel
 #!fsharp
 
 // functions
+let duplicatesIn ((pocket1:char seq, pocket2: char seq):Rucksack) : char seq =
+    let distinct = pocket2 |> Seq.distinct
+    pocket1
+    |> Seq.distinct
+    |> Seq.filter (fun c -> Seq.contains c distinct)
+
+let score (c:char) : int =
+    if Char.IsLower(c) then
+        1+((int)c) - ((int)'a')
+    else
+        27+((int)c) - ((int)'A')
 
 // process values
-input
+input.Split('\n')
+|> Array.map (toRucksack >> duplicatesIn >> (Seq.map score) >> Seq.sum)
+|> Array.sum
 
 #!markdown
 
 # Part 02 - 
+
+#!fsharp
+
+let shared input =
+    input
+    |> Array.map (fun s ->  Set.ofSeq s)
+    |> Array.reduce (fun a b -> b |> Set.intersect a)
+
+input.Split('\n')
+|> Array.chunkBySize 3
+|> Array.map (shared >> (Seq.map score) >> Seq.sum)
+|> Array.sum
