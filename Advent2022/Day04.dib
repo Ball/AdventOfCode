@@ -1,0 +1,86 @@
+#!markdown
+
+# Day 04
+
+see [F# Interactive](https://learn.microsoft.com/en-us/dotnet/fsharp/tools/fsharp-interactive/) for details on loading external code
+
+#!fsharp
+
+// Load packages and helper code
+#r "nuget: FParsec"
+#r "bin/Debug/net7.0/Advent2022.dll"
+open FParsec
+open Advent2022.ParserUtils
+
+#!markdown
+
+## Problem Input
+
+#!fsharp
+
+let input = System.IO.File.ReadAllText("Day04.txt")
+let testInput = """2-4,6-8
+2-3,4-5
+5-7,7-9
+2-8,3-7
+6-6,4-6
+2-6,4-8"""
+
+#!markdown
+
+# Part 01 - 
+
+## Process Input
+
+see [FParsec](http://www.quanttec.com/fparsec/reference/primitives.html) for help
+
+#!fsharp
+
+// Expected Types
+type Range = int * int
+type Pair = Range * Range
+
+// Parsers
+let pRange : Parser<Range,unit> = (manySatisfy isDigit) .>> (pstring "-") .>>. (manySatisfy isDigit)
+                                |>> (fun (a,b) -> (Int32.Parse(a),Int32.Parse(b)))
+let pPair : Parser<Pair,unit> = pRange .>> (pstring ",") .>>. pRange
+let pAssignmentLog = sepEndBy pPair newline
+test pAssignmentLog testInput
+
+// test $PARSER testInput
+
+#!markdown
+
+## Operate on Input Values 
+
+#!fsharp
+
+// functions
+let RangeToSet (a,b) = seq {a..b} |> Set.ofSeq
+let PairIsInclusive (a,b) =
+    let sa = RangeToSet a
+    let sb = RangeToSet b
+    let anb = Set.intersect sa sb
+    sa = anb || sb=anb
+
+// process values
+input
+|> runParser pAssignmentLog
+|> List.filter PairIsInclusive
+|> List.length
+
+#!markdown
+
+# Part 02 - 
+
+#!fsharp
+
+let PairIsOverlapping (a,b) =
+    let sa = RangeToSet a
+    let sb = RangeToSet b
+    let anb = Set.intersect sa sb
+    anb.Count <> 0
+input
+|> runParser pAssignmentLog
+|> List.filter PairIsOverlapping
+|> List.length
