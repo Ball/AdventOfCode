@@ -1,0 +1,137 @@
+#!markdown
+
+# Day 05 - Supply Stacks, moving crates with a crane
+
+see [F# Interactive](https://learn.microsoft.com/en-us/dotnet/fsharp/tools/fsharp-interactive/) for details on loading external code
+
+#!fsharp
+
+// Load packages and helper code
+#r "nuget: FParsec"
+#r "bin/Debug/net7.0/Advent2022.dll"
+open FParsec
+open Advent2022.ParserUtils
+
+#!markdown
+
+## Problem Input
+
+#!fsharp
+
+let input = System.IO.File.ReadAllText("Day05.txt")
+let testInput = """    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2"""
+
+#!markdown
+
+# Part 01 - 
+
+## Process Input
+
+see [FParsec](http://www.quanttec.com/fparsec/reference/primitives.html) for help
+
+#!fsharp
+
+// Expected Types
+type Crate =
+    | Cargo of char
+    | Empty
+type CraneCommand =
+    {count : int
+    ; start: int
+    ; dest :int }
+
+let PutOnStacks (x: Crate list) (stacks: Crate list array) =
+    x
+    |> List.mapi (fun i a -> (i,a))
+    |> List.fold (fun s (i,a) ->
+            match a with
+            | Empty -> s
+            | Cargo _ -> match Array.tryItem i s with
+                         | None -> Array.updateAt i (a::[]) s
+                         | Some l -> Array.updateAt i (a::l) s
+        ) stacks
+let rec ToCargoStacks (x: Crate list list) =
+    let width = x |> List.head |> List.length
+    let s = Array.init width (fun _ -> [])
+    FillStacks (x |> List.rev) s
+and FillStacks (x: Crate list list) (s: Crate list array) =
+    match x with
+    | [] -> s
+    | row :: rest -> FillStacks rest (PutOnStacks row s)
+
+
+// Parsers
+let pCrate = (pstring "[") >>. letter .>> (pstring "]") |>> Cargo
+let pEmpty : Parser<Crate,unit> = pstring "   " >>% Empty
+let loadingRow = sepEndBy (pCrate <|> pEmpty) (pstring " ")
+let cargoSection = sepEndBy loadingRow newline |>> ToCargoStacks
+
+let command : Parser<CraneCommand, unit> =
+    (pstring "move ") >>. number .>> (pstring " from ") .>>. number .>> (pstring " to ") .>>. number
+    |>> (fun ((a,b),c) -> {count = a; start = b; dest = c})
+
+let commandList = sepEndBy command newline
+let indexRow = (pstring " ") >>. sepEndBy number spaces
+let cargoLog = (cargoSection .>> indexRow .>> spaces .>>. commandList)
+
+test cargoLog testInput
+
+#!markdown
+
+## Operate on Input Values 
+
+#!fsharp
+
+// functions
+let MakeMove (cargo: Crate list array) (move:CraneCommand) =
+    let starti = move.start-1
+    let desti = move.dest-1
+    let toMove = cargo.[starti] |> List.take move.count |> List.rev
+    cargo
+    |> Array.updateAt starti (cargo[starti] |> List.skip move.count)
+    |> Array.updateAt desti (cargo[desti] |> List.append toMove)
+let rec MoveCargo ((cargo: Crate list array),(moves:(CraneCommand list))) =
+    match moves with
+    | [] -> cargo
+    | move:: moves ->
+        let c = MakeMove cargo move
+        MoveCargo (c,moves)
+
+// process values
+runParser cargoLog input
+|> MoveCargo
+|> Array.map List.head
+
+#!markdown
+
+# Part 02 - 
+
+#!fsharp
+
+// functions
+let MakeMove (cargo: Crate list array) (move:CraneCommand) =
+    let starti = move.start-1
+    let desti = move.dest-1
+    let toMove = cargo.[starti] |> List.take move.count
+    cargo
+    |> Array.updateAt starti (cargo[starti] |> List.skip move.count)
+    |> Array.updateAt desti (cargo[desti] |> List.append toMove)
+let rec MoveCargo ((cargo: Crate list array),(moves:(CraneCommand list))) =
+    match moves with
+    | [] -> cargo
+    | move:: moves ->
+        let c = MakeMove cargo move
+        MoveCargo (c,moves)
+
+// process values
+runParser cargoLog input
+|> MoveCargo
+|> Array.map List.head
