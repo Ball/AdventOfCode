@@ -1,0 +1,64 @@
+#!markdown
+
+# Day 06 - Tuning Trouble
+
+see [F# Interactive](https://learn.microsoft.com/en-us/dotnet/fsharp/tools/fsharp-interactive/) for details on loading external code
+
+#!fsharp
+
+// Load packages and helper code
+#r "nuget: FParsec"
+#r "bin/Debug/net7.0/Advent2022.dll"
+open FParsec
+open Advent2022.ParserUtils
+
+#!markdown
+
+## Problem Input
+
+#!fsharp
+
+let input = System.IO.File.ReadAllText("Day06.txt")
+let testInput = """mjqjpqmgbljsphdztnvjfqwrcgsmlb"""
+
+#!markdown
+
+# Part 01 - 
+
+#!markdown
+
+## Operate on Input Values 
+
+#!fsharp
+
+// functions
+
+let findPacketHeaderStart (s:string) =
+    s
+    |> Seq.windowed 4
+    |> Seq.map (Seq.distinct >> Seq.length)
+    |> Seq.takeWhile (fun x -> x <> 4)
+    |> Seq.length
+
+// process values
+input
+|> findPacketHeaderStart
+|> (+) 4
+
+#!markdown
+
+# Part 02 - 
+
+#!fsharp
+
+let findMessageHeaderStart (s:string) =
+    s
+    |> Seq.windowed 14
+    |> Seq.map (Seq.distinct >> Seq.length)
+    |> Seq.takeWhile (fun x -> x <> 14)
+    |> Seq.length
+
+
+input
+|> findMessageHeaderStart
+|> (+) 14
